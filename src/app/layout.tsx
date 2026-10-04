@@ -21,6 +21,16 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "Kutumb — Your Family's Shared Memory",
   description: "A shared AI-powered family memory and coordination application. Remember, coordinate, and listen to family updates.",
+  icons: {
+    icon: [
+      { url: "/kutumb-logo.png", type: "image/png" },
+      { url: "/favicon.ico" },
+    ],
+    apple: [
+      { url: "/kutumb-logo.png", type: "image/png" },
+    ],
+    shortcut: "/kutumb-logo.png",
+  },
 };
 
 async function getMe(): Promise<MeDTO | null> {
