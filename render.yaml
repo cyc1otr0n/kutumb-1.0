@@ -1,0 +1,56 @@
+services:
+  # Next.js Web Application
+  - type: web
+    name: kutumb-web
+    env: node
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DB
+        value: kutumb
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: GOOGLE_GENERATIVE_AI_API_KEY
+        sync: false
+      - key: GEMMA_MODEL
+        value: gemma-4-31b-it
+      - key: TEMPORAL_ADDRESS
+        sync: false
+      - key: TEMPORAL_NAMESPACE
+        value: default
+      - key: TEMPORAL_API_KEY
+        sync: false
+      - key: TEMPORAL_TASK_QUEUE
+        value: kutumb-reminders
+      - key: SENTRY_DSN
+        sync: false
+
+  # Background Temporal Worker (Reminders & Workflows)
+  - type: worker
+    name: kutumb-temporal-worker
+    env: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npx tsx src/server/temporal/worker.ts
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DB
+        value: kutumb
+      - key: TEMPORAL_ADDRESS
+        sync: false
+      - key: TEMPORAL_NAMESPACE
+        value: default
+      - key: TEMPORAL_API_KEY
+        sync: false
+      - key: TEMPORAL_TASK_QUEUE
+        value: kutumb-reminders
+      - key: SENTRY_DSN
+        sync: false
