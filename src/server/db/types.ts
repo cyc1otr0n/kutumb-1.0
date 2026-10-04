@@ -109,6 +109,13 @@ export const MEMORY_CATEGORIES = [
 ] as const;
 export type MemoryCategory = (typeof MEMORY_CATEGORIES)[number];
 
+export interface MemoryAttachment {
+  url: string;
+  fileName: string;
+  fileType: string;
+  fileSize?: number;
+}
+
 export interface MemoryDoc {
   _id: ObjectId;
   familyId: ObjectId;
@@ -116,6 +123,7 @@ export interface MemoryDoc {
   content: string;
   category: MemoryCategory;
   source: "manual" | "assistant" | "voice";
+  attachments?: MemoryAttachment[];
   createdAt: Date;
   updatedAt: Date;
 }

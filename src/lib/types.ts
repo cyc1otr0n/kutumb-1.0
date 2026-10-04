@@ -85,12 +85,20 @@ export const MEMORY_CATEGORY_LIST = [
 ] as const;
 export type MemoryCategoryDTO = (typeof MEMORY_CATEGORY_LIST)[number];
 
+export interface MemoryAttachmentDTO {
+  url: string;
+  fileName: string;
+  fileType: string;
+  fileSize?: number;
+}
+
 export interface MemoryDTO {
   id: string;
   content: string;
   category: MemoryCategoryDTO;
   source: "manual" | "assistant" | "voice";
   createdAt: string;
+  attachments?: MemoryAttachmentDTO[];
 }
 
 export interface ReminderDTO {

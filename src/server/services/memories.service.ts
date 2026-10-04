@@ -14,6 +14,14 @@ export function toMemoryDTO(doc: MemoryDoc): MemoryDTO {
     category: doc.category,
     source: doc.source,
     createdAt: doc.createdAt.toISOString(),
+    attachments: doc.attachments
+      ? doc.attachments.map((a) => ({
+          url: a.url,
+          fileName: a.fileName,
+          fileType: a.fileType,
+          fileSize: a.fileSize,
+        }))
+      : [],
   };
 }
 
@@ -23,6 +31,7 @@ export async function saveFamilyMemory(
     content: string;
     category?: MemoryCategory;
     source?: "manual" | "assistant" | "voice";
+    attachments?: Array<{ url: string; fileName: string; fileType: string; fileSize?: number }>;
   }
 ): Promise<MemoryDoc> {
   if (!data.content?.trim()) throw invalid("Memory content cannot be empty");
@@ -35,6 +44,7 @@ export async function saveFamilyMemory(
     content: data.content.trim(),
     category: data.category || "miscellaneous",
     source: data.source || "manual",
+    attachments: data.attachments || [],
     createdAt: new Date(),
     updatedAt: new Date(),
   };

@@ -5,7 +5,7 @@ import type { AuthContext } from "../context";
 import { getTodaySchedule, getUpcomingEvents } from "./events.service";
 import { getTasks } from "./tasks.service";
 import { getFamilyUpdates } from "./updates.service";
-import { formatDateTime } from "@/lib/time";
+import { formatDateTime, greetingFor } from "@/lib/time";
 import { env } from "../env";
 import { captureError, traceSpan } from "../observability";
 import type { DigestDTO } from "@/lib/types";
@@ -117,12 +117,12 @@ Do NOT invent any facts not present above. If a category has no items, omit that
       }
     }
 
-    // Reliable fallback if AI was unavailable or failed
+    // Reliable fallback if AI was unavailable, failed, or sections were empty
     if (sections.length === 0) {
       if (todayEvents.length > 0) {
         sections.push({
           title: "Today's Schedule",
-          items: todayEvents.map((e) => `${e.title} (${formatDateTime(e.startsAt, ctx.timezone, { allDay: e.allDay })})`),
+          items: todayEvents.map((e) => `${e.title} at ${formatDateTime(e.startsAt, ctx.timezone, { allDay: e.allDay })}`),
         });
       }
       if (tasks.length > 0) {
@@ -143,8 +143,11 @@ Do NOT invent any facts not present above. If a category has no items, omit that
           items: upcomingEvents.slice(0, 3).map((e) => `${e.title} on ${formatDateTime(e.startsAt, ctx.timezone)}`),
         });
       }
+    }
 
-      spokenText = `Here is your family digest. ${todayEvents.length > 0 ? `Today you have ${todayEvents.length} event${todayEvents.length > 1 ? "s" : ""}.` : "You have no events scheduled for today."} ${tasks.length > 0 ? `There are ${tasks.length} pending task${tasks.length > 1 ? "s" : ""}.` : ""} Have a great day!`;
+    // If spokenText is missing or a bare count summary, generate the rich natural spoken script
+    if (!spokenText || spokenText.includes("Today you have") || spokenText === headline) {
+      spokenText = buildNaturalSpokenScript(sections, greetingFor(today, ctx.timezone));
     }
 
     const digestDoc: DailyDigestDoc = {
@@ -167,5 +170,49 @@ Do NOT invent any facts not present above. If a category has no items, omit that
     span.setAttributes({ "digest.sections": sections.length, "digest.generated_by": generatedBy });
     return digestDoc;
   });
+}
+
+export function buildNaturalSpokenScript(
+  sections: DigestSection[],
+  greeting = "Good day!"
+): string {
+  const parts: string[] = [];
+  parts.push(`${greeting} Here is today's family digest.`);
+
+  for (const section of sections) {
+    if (!section.items || section.items.length === 0) continue;
+    const titleLower = section.title.toLowerCase();
+
+    // Natural item join: "A, B, and C"
+    let formattedItems = "";
+    if (section.items.length === 1) {
+      formattedItems = section.items[0];
+    } else if (section.items.length === 2) {
+      formattedItems = `${section.items[0]} and ${section.items[1]}`;
+    } else {
+      const allExceptLast = section.items.slice(0, -1).join(", ");
+      formattedItems = `${allExceptLast}, and ${section.items[section.items.length - 1]}`;
+    }
+
+    if (titleLower.includes("schedule") || titleLower.includes("focus") || titleLower.includes("today")) {
+      parts.push(`Today's schedule: ${formattedItems}.`);
+    } else if (titleLower.includes("task")) {
+      parts.push(`Tasks to handle: ${formattedItems}.`);
+    } else if (titleLower.includes("note") || titleLower.includes("update")) {
+      parts.push(`Recent notes: ${formattedItems}.`);
+    } else if (titleLower.includes("coming") || titleLower.includes("upcoming")) {
+      parts.push(`Coming up: ${formattedItems}.`);
+    } else {
+      parts.push(`${section.title}: ${formattedItems}.`);
+    }
+  }
+
+  if (sections.length === 0) {
+    parts.push("You have no events, tasks, or updates recorded for today. Everything is clear!");
+  } else {
+    parts.push("Have a wonderful day!");
+  }
+
+  return parts.join(" ");
 }
 

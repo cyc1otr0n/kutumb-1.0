@@ -22,10 +22,22 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     if (!body.content) throw invalid("Memory content cannot be empty");
 
+    const attachments = Array.isArray(body.attachments)
+      ? body.attachments
+          .filter((a: any) => a && typeof a.url === "string" && typeof a.fileName === "string")
+          .map((a: any) => ({
+            url: a.url,
+            fileName: String(a.fileName).slice(0, 150),
+            fileType: String(a.fileType || "application/octet-stream"),
+            fileSize: typeof a.fileSize === "number" ? a.fileSize : undefined,
+          }))
+      : [];
+
     const memory = await saveFamilyMemory(ctx, {
       content: body.content,
       category: body.category,
       source: "manual",
+      attachments,
     });
 
     return toMemoryDTO(memory);

@@ -23,10 +23,18 @@ export const env = {
     throw new Error("SESSION_SECRET must be set (32+ characters) in production.");
   },
 
-  googleApiKey: () => optional("GOOGLE_GENERATIVE_AI_API_KEY") ?? optional("GEMINI_API_KEY"),
+  googleApiKey: () =>
+    optional("GOOGLE_GENERATIVE_AI_API_KEY") ??
+    optional("GEMINI_API_KEY") ??
+    optional("GOOGLE_API_KEY"),
   gemmaModel: () => optional("GEMMA_MODEL") ?? "gemma-4-26b-a4b-it",
 
-  // Voice (STT + TTS) runs entirely in the browser via the Web Speech API — no server keys needed.
+  elevenLabsApiKey: () =>
+    optional("ELEVENLABS_API_KEY") ??
+    optional("ELEVEN_LABS_API_KEY") ??
+    optional("ELEVENLABS_KEY") ??
+    optional("ELEVEN_LABS_KEY"),
+  elevenLabsVoiceId: () => optional("ELEVENLABS_VOICE_ID") ?? "21m00Tcm4TlvDq8ikWAM", // Rachel - warm, natural narrator
 
   temporalAddress: () => optional("TEMPORAL_ADDRESS") ?? "localhost:7233",
   temporalNamespace: () => optional("TEMPORAL_NAMESPACE") ?? "default",

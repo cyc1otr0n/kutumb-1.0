@@ -8,7 +8,9 @@ export function apiSuccess<T>(data: T, status = 200) {
 
 export function apiError(err: unknown) {
   const appError = toAppError(err);
-  captureError(err, { area: "api_route" });
+  if (appError.status >= 500) {
+    captureError(err, { area: "api_route" });
+  }
   return NextResponse.json(
     {
       error: {
